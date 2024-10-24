@@ -6,7 +6,7 @@ import json
 import flask
 
 class PriceComparator:
-    CHECK_SEARCH_RESULTS = 10
+    CHECK_SEARCH_RESULTS = 1
 
     def __init__(self):
         self.sb = SB(uc=True, headed=True)

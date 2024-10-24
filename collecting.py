@@ -156,7 +156,8 @@ def search():
         resp = cache[req]
     else:
         _resp = comparator.compare(req)
-        _resp["query"] = req
+        for i in range(len(_resp)):
+            _resp[i]["query"] = req
         resp = flask.Response(json.dumps(_resp))
         resp.headers['Access-Control-Allow-Origin'] = '*'
         cache[req] = resp

@@ -3,8 +3,76 @@
 // market analysis should not be shit
 // price range in any currancy and system - 1
 // Fix the Visit Site button. - 0.9
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useReducer } from 'react'
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react'
+import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Label } from "recharts"
+import { ChartTooltip } from "./chart"
+
+function StockPriceChart({ data }) {
+  const CustomizedDot = (props) => {
+    const { cx, cy, payload } = props
+    if (payload.event) {
+      return (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={4}
+          fill="hsl(var(--primary))"
+          stroke="white"
+          strokeWidth={2}
+        />
+      )
+    }
+    return null
+  }
+
+  return (
+    <ResponsiveContainer width={300} height={300}>
+      <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+        <YAxis tick={{ fontSize: 10 }} />
+        <ChartTooltip
+          formatter={(value, name, props) => {
+            if (props.payload.event) {
+              return [`$${value}`, `${name} (${props.payload.event})`]
+            }
+            return [`$${value}`, name]
+          }}
+        />
+        <Line
+          type="monotone"
+          dataKey="price"
+          stroke="var(--color-price)"
+          strokeWidth={2}
+          dot={<CustomizedDot />}
+        />
+        {data.map((data, index) => {
+          if (data.event) {
+            return (
+              <ReferenceLine
+                key={index}
+                x={data.day}
+                stroke="hsl(var(--primary))"
+                strokeDasharray="3 3"
+              >
+                <Label
+                  value={data.event}
+                  position="top"
+                  fill="hsl(var(--primary))"
+                  fontSize={10}
+                />
+              </ReferenceLine>
+            )
+          }
+          return null
+        })}
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
+var currently_sending_requests = false;
 
 export default function Results(resData) {
   resData = resData.resData;
@@ -15,6 +83,7 @@ export default function Results(resData) {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [hoverData, setHoverData] = useState(undefined)
   const hoverRef = useRef(null)
+  const [, forceUpdate] = useReducer(x => x + 1, 0)
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -37,13 +106,16 @@ export default function Results(resData) {
   }, [isHovering])
 
   function loadingHover(){
-    fetch(`http://localhost:3030/chart?q=${resData.query}`).then(res => {return res.json()}).then(res => {
-      setHoverData(res);
-    })
+    if ((hoverData == undefined) && (!currently_sending_requests)){
+      fetch(`http://localhost:3030/chart?q=${resData[0].query}`).then(res => {return res.json()}).then(res => {
+        setHoverData(res);
+        forceUpdate();
+      })
+      currently_sending_requests = true;
+    }
 
-    if (isHovering && (hoverData != ))
-    return  && (
-      <div 
+    if (isHovering && (hoverData != undefined)){
+      (<div 
         className="absolute z-10 bg-background border rounded-lg shadow-lg"
         style={{
           left: `${position.x}px`,
@@ -51,9 +123,10 @@ export default function Results(resData) {
           transform: 'translate(-50%, -100%)',
         }}
       >
-        <StockPriceChart data={stockData} />
-      </div>
-    )
+        <StockPriceChart data={hoverData} />
+      </div>)
+    }
+    return (hoverData == undefined) ? <p>{'loading... the spinny thing stoped working :( '}</p> : <></>;
   }
   
   useEffect(() => {

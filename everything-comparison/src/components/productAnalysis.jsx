@@ -13,8 +13,6 @@ const ProductAnalysisCard = ({ data }) => {
     future,
     desc,
     exists,
-    growth,
-    market_compition_status,
     risks
   } = data
 
@@ -78,7 +76,7 @@ const ProductAnalysisCard = ({ data }) => {
                   <BarChart2 className="h-5 w-5 text-purple-500 mr-2" />
                   <span className="text-gray-700">Future Prospect: </span>
                   <span className={`ml-2 font-semibold`}>
-                    {future}
+                    {future}  
                   </span>
                 </div>
               </div>
@@ -109,18 +107,14 @@ const ProductAnalysisCard = ({ data }) => {
 
 export default function Component(data) {
     data = data.data;
-    console.log(data);
   const productData = {
     merit_score: data.merit_score,
     max_merit_score: data.max_merit_score,
-    market_share: data.market_share,
-    profits: data.profits,
-    revenue: data.revenue,
-    costs: data.costs,
+    past: data.past,
+    current: data.current,
+    future: data.future,
     desc: data.desc,
     exists: data.exists,
-    growth: data.growth,
-    market_compition_status: data.market_compition_status,
     risks: data.risks
   }
 

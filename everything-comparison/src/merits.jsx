@@ -56,6 +56,7 @@ export default function Component() {
                                 placeholder="Enter product or service name"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
+                                        setLoadingAnimation(0);
                                         search(e.currentTarget.value)
                                     }
                                 }}

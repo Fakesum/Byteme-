@@ -1,14 +1,61 @@
 'use client'
-
+// faster loading - 0.5
+// market analysis should not be shit
+// price range in any currancy and system - 1
+// Fix the Visit Site button. - 0.9
 import { useState, useRef, useEffect } from 'react'
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react'
 
 export default function Results(resData) {
-    resData = resData.resData;
+  resData = resData.resData;
   const scrollContainerRef = useRef(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
+  const [isHovering, setIsHovering] = useState(false)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [hoverData, setHoverData] = useState(undefined)
+  const hoverRef = useRef(null)
 
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      if (hoverRef.current) {
+        const rect = hoverRef.current.getBoundingClientRect()
+        setPosition({
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top,
+        })
+      }
+    }
+
+    if (isHovering) {
+      window.addEventListener("mousemove", handleMouseMove)
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+    }
+  }, [isHovering])
+
+  function loadingHover(){
+    fetch(`http://localhost:3030/chart?q=${resData.query}`).then(res => {return res.json()}).then(res => {
+      setHoverData(res);
+    })
+
+    if (isHovering && (hoverData != ))
+    return  && (
+      <div 
+        className="absolute z-10 bg-background border rounded-lg shadow-lg"
+        style={{
+          left: `${position.x}px`,
+          top: `${position.y}px`,
+          transform: 'translate(-50%, -100%)',
+        }}
+      >
+        <StockPriceChart data={stockData} />
+      </div>
+    )
+  }
+  
   useEffect(() => {
     const handleScroll = () => {
       if (scrollContainerRef.current) {
@@ -39,7 +86,11 @@ export default function Results(resData) {
   }
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto px-4 py-8 bg-white">
+    <div className="relative w-full max-w-5xl mx-auto px-4 py-8 bg-white"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        ref={hoverRef}
+      >
       <div className="relative">
         {showLeftArrow && (
           <button
@@ -101,12 +152,12 @@ export default function Results(resData) {
                   </div>
                 </div>
                 <a
-                  href={offering.company_url}
+                  href={`https://www.google.com/search?q=${offering.company}+${offering.query}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 block w-full text-center bg-primary text-primary-foreground py-2 rounded-md hover:bg-primary/90 transition-colors"
                 >
-                  Learn More
+                  Visit Site
                 </a>
               </div>
             </div>
@@ -114,6 +165,7 @@ export default function Results(resData) {
           }
         </div>
       </div>
+      {loadingHover()}
     </div>
   )
 }

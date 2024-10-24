@@ -1,6 +1,6 @@
 import Results from './display_results'
 import './App.css'
-import { useState, useReducer } from 'react';
+import { useState, useReducer, useEffect } from 'react';
 import Header from './header'
 import Footer from './footer'
 import LoadingBar from './components/loading';
@@ -9,6 +9,7 @@ import 'leaflet/dist/leaflet.css'
 
 export default function Component() {
     const [loading, setLoading] = useState(0);
+    const [loading_bar, setLoadingBar] = useState(0);
     const [_, forceUpdate] = useReducer(x => x + 1, 0);
     const [temp_marker, setTempMarker] = useState(undefined);
     const [results, setResults] = useState(null);
@@ -29,11 +30,17 @@ export default function Component() {
           setLoading(0);
         }).catch(e => {console.log(e)});
     }
+  
+    useEffect(() => {
+      setInterval(() => {
+        setLoadingBar(loading_bar + 1);
+      }, 5000)
+    });
 
   function loadingBar(){
     return (
       <div>
-        <LoadingBar progress={loading} max={2}/>
+        <LoadingBar progress={loading_bar} max={120}/>
       </div>
     )
   }

@@ -8,10 +8,9 @@ const ProductAnalysisCard = ({ data }) => {
   const {
     merit_score,
     max_merit_score,
-    market_share,
-    profits,
-    revenue,
-    costs,
+    past,
+    current,
+    future,
     desc,
     exists,
     growth,
@@ -67,19 +66,19 @@ const ProductAnalysisCard = ({ data }) => {
               <div className="space-y-2">
                 <div className="flex items-center">
                   <PieChart className="h-5 w-5 text-blue-500 mr-2" />
-                  <span className="text-gray-700">Market Share: </span>
-                  <span className="ml-2 font-semibold">{market_share}%</span>
+                  <span className="text-gray-700">Past Prospect: </span>
+                  <span className="ml-2 font-semibold">{past}</span>
                 </div>
                 <div className="flex items-center">
                   <TrendingUp className="h-5 w-5 text-green-500 mr-2" />
-                  <span className="text-gray-700">Growth Rate: </span>
-                  <span className="ml-2 font-semibold">{(growth * 100).toFixed(1)}%</span>
+                  <span className="text-gray-700">Current Prospect: </span>
+                  <span className="ml-2 font-semibold">{current}</span>
                 </div>
                 <div className="flex items-center">
                   <BarChart2 className="h-5 w-5 text-purple-500 mr-2" />
-                  <span className="text-gray-700">Competitor Status: </span>
-                  <span className={`ml-2 font-semibold ${getCompetitorColor(market_compition_status)}`}>
-                    {getCompetitorStatus(market_compition_status)} ({market_compition_status}/100)
+                  <span className="text-gray-700">Future Prospect: </span>
+                  <span className={`ml-2 font-semibold`}>
+                    {future}
                   </span>
                 </div>
               </div>

@@ -5,7 +5,7 @@ export default () => (
       <div className="mx-auto px-4 sm:px-8 lg:px-8">
         <div className="flex justify-between items-center py-6 md:justify-start md:space-x-10">
           <div className="flex justify-start lg:w-0 lg:flex-1">
-            <a href="#" className="flex items-center">
+            <a href="/" className="flex items-center">
               <BarChart2 className="h-8 w-8 text-blue-600" />
               <span className="ml-2 text-xl font-bold text-gray-900"></span>
             </a>
@@ -21,7 +21,7 @@ export default () => (
               Product Merit Search
             </a>
             <a href="#" className="text-base font-medium text-gray-500 hover:text-gray-900">
-              Contact
+              Contact Us
             </a>
           </nav>
         </div>

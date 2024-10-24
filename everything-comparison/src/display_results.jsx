@@ -1,87 +1,132 @@
-'use client'
-// faster loading - 0.5
-// market analysis should not be shit
-// price range in any currancy and system - 1
-// Fix the Visit Site button. - 0.9
-import { useState, useRef, useEffect, useReducer } from 'react'
+import React, { useState, useRef, useEffect, useReducer } from 'react'
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react'
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Label } from "recharts"
 import { ChartTooltip } from "./chart"
 
-function StockPriceChart({ data }) {
+function TimelineChart(data) {
+  data = data.data;
+
+// Add index to data for x-axis
+const processedData = data.map((item, index) => ({
+  ...item,
+  index
+}));
+
+const maxPrice = Math.max(...data.map(item => item.price));
+
+return (
+  <div className="w-full h-64">
+    <LineChart
+      width={800}
+      height={256}
+      data={processedData}
+      margin={{ top: 32, right: 32, left: 32, bottom: 32 }}
+    >
+      {/* Line for price data */}
+      <Line
+        type="monotone"
+        dataKey="price"
+        stroke="#2563eb"
+        strokeWidth={2}
+        dot={false}
+      />
+      
+      {/* Axes without ticks or labels */}
+      <XAxis hide={true} />
+      <YAxis hide={true} />
+      
+      {/* Event markers */}
+      {processedData.map((point, index) => {
+        return null;
+      })}
+    </LineChart>
+  </div>
+);
+};
+
+export function StockPriceChart({ data }) {
   const CustomizedDot = (props) => {
-    const { cx, cy, payload } = props
+    const { cx, cy, payload } = props;
     if (payload.event) {
       return (
         <circle
           cx={cx}
           cy={cy}
           r={4}
-          fill="hsl(var(--primary))"
+          fill="#2563eb"
           stroke="white"
           strokeWidth={2}
         />
-      )
+      );
     }
-    return null
+    return null;
   }
 
+  const formattedData = data.map(item => ({
+    name: item.event || '',
+    amt: item.price
+  }));
+
   return (
-    <ResponsiveContainer width={300} height={300}>
-      <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={formattedData} margin={{ top: 20, right: 30, left: 20, bottom: 10 }}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+        <XAxis data={formattedData} dataKey="name" tick={{ fontSize: 10 }} />
         <YAxis tick={{ fontSize: 10 }} />
         <ChartTooltip
           formatter={(value, name, props) => {
             if (props.payload.event) {
-              return [`$${value}`, `${name} (${props.payload.event})`]
+              return [`$${value}`, `${name} (${props.payload.event})`];
             }
-            return [`$${value}`, name]
+            return [`$${value}`, name];
           }}
         />
         <Line
+          data={formattedData}
           type="monotone"
-          dataKey="price"
-          stroke="var(--color-price)"
-          strokeWidth={2}
+          dataKey="amt"
+          stroke="#2563eb"
+          strokeWidth={10}
           dot={<CustomizedDot />}
         />
-        {data.map((data, index) => {
-          if (data.event) {
+        {formattedData.map((data, index) => {
+          if (data.name) {
             return (
               <ReferenceLine
                 key={index}
-                x={data.day}
-                stroke="hsl(var(--primary))"
+                x={index}
+                stroke="#2563eb"
                 strokeDasharray="3 3"
               >
                 <Label
-                  value={data.event}
+                  value={data.name}
                   position="top"
-                  fill="hsl(var(--primary))"
+                  fill="#2563eb"
                   fontSize={10}
                 />
               </ReferenceLine>
-            )
+            );
           }
-          return null
+          return null;
         })}
       </LineChart>
     </ResponsiveContainer>
-  )
+  );
 }
-
-var currently_sending_requests = false;
 
 export default function Results(resData) {
   resData = resData.resData;
+
+  if (resData.length == 0){
+    return (<div>NO results found, Try searching without the use of location specifier.</div>)
+  }
   const scrollContainerRef = useRef(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
-  const [isHovering, setIsHovering] = useState(false)
+  const [hoveredCard, setHoveredCard] = useState(null)
   const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [hoverData, setHoverData] = useState(undefined)
+  const [hoverDataMap, setHoverDataMap] = useState({})
+  const [loadingStates, setLoadingStates] = useState({})
   const hoverRef = useRef(null)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
 
@@ -96,39 +141,59 @@ export default function Results(resData) {
       }
     }
 
-    if (isHovering) {
+    if (hoveredCard !== null) {
       window.addEventListener("mousemove", handleMouseMove)
     }
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove)
     }
-  }, [isHovering])
+  }, [hoveredCard])
 
-  function loadingHover(){
-    if ((hoverData == undefined) && (!currently_sending_requests)){
-      fetch(`http://localhost:3030/chart?q=${resData[0].query}`).then(res => {return res.json()}).then(res => {
-        setHoverData(res);
-        forceUpdate();
-      })
-      currently_sending_requests = true;
+  const loadHoverData = async (index, company) => {
+    if (!hoverDataMap[index] && !loadingStates[index]) {
+      setLoadingStates(prev => ({ ...prev, [index]: true }))
+      try {
+        const res = await fetch(`http://localhost:3030/chart?q=${resData[0].query}&company=${company}`)
+        const data = await res.json()
+        setHoverDataMap(prev => ({ ...prev, [index]: data }))
+        forceUpdate()
+      } catch (error) {
+        console.error('Error loading hover data:', error)
+      }
+      setLoadingStates(prev => ({ ...prev, [index]: false }))
     }
-
-    if (isHovering && (hoverData != undefined)){
-      (<div 
-        className="absolute z-10 bg-background border rounded-lg shadow-lg"
-        style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
-          transform: 'translate(-50%, -100%)',
-        }}
-      >
-        <StockPriceChart data={hoverData} />
-      </div>)
-    }
-    return (hoverData == undefined) ? <p>{'loading... the spinny thing stoped working :( '}</p> : <></>;
   }
-  
+
+  const renderHoverContent = (index) => {
+    if (hoveredCard === index) {
+      if (loadingStates[index]) {
+        return <p>loading... the spinny thing stopped working :( </p>
+      }
+
+      const hoverData = hoverDataMap[index]
+      if (!hoverData) return null
+
+       return (
+        <div 
+          className="absolute z-10 bg-background border rounded-lg shadow-lg"
+          style={{
+            left: `${position.x - 160}px`,
+            top: `${position.y - 30}px`,
+            transform: 'translate(-50%, -100%)',
+          }}
+        >
+          {hoverData.length > 0 ? (
+            <TimelineChart data={hoverData} />
+          ) : (
+            <p>No data available</p>
+          )}
+        </div>
+      )
+    }
+    return null
+  }
+
   useEffect(() => {
     const handleScroll = () => {
       if (scrollContainerRef.current) {
@@ -141,7 +206,7 @@ export default function Results(resData) {
     const scrollContainer = scrollContainerRef.current
     if (scrollContainer) {
       scrollContainer.addEventListener('scroll', handleScroll)
-      handleScroll() // Initial check
+      handleScroll()
     }
 
     return () => {
@@ -159,11 +224,7 @@ export default function Results(resData) {
   }
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto px-4 py-8 bg-white"
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-        ref={hoverRef}
-      >
+    <div className="relative w-full max-w-5xl mx-auto px-4 py-8 bg-white" ref={hoverRef}>
       <div className="relative">
         {showLeftArrow && (
           <button
@@ -190,15 +251,21 @@ export default function Results(resData) {
           style={{ scrollBehavior: 'smooth' }}
         >
           {resData.map((offering, index) => (
-            <div key={index} className="flex-none w-72">
+            <div 
+              key={index} 
+              className="flex-none w-72"
+              onMouseEnter={() => {
+                setHoveredCard(index)
+                loadHoverData(index, offering.company)
+              }}
+              onMouseLeave={() => setHoveredCard(null)}
+            >
               <div className="border rounded-lg shadow-md p-4 h-full flex flex-col">
                 <h3 className="text-xl font-semibold mb-2">{offering.company}</h3>
                 <div className="mb-4">
-                  {
-                    offering.pricies.map((value, index)=>(
-                      <p className="font-bold text-2xl text-primary" key={`prices-${index}`}>{value}</p>
-                    ))
-                  }
+                  {offering.pricies.map((value, index) => (
+                    <p className="font-bold text-2xl text-primary" key={`prices-${index}`}>{value}</p>
+                  ))}
                 </div>
                 <div className="flex-grow">
                   <div className="mb-2">
@@ -233,12 +300,11 @@ export default function Results(resData) {
                   Visit Site
                 </a>
               </div>
+              {renderHoverContent(index)}
             </div>
-          ))
-          }
+          ))}
         </div>
       </div>
-      {loadingHover()}
     </div>
   )
 }

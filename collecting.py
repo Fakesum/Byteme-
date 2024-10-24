@@ -128,7 +128,7 @@ class PriceComparator:
             },
             {
                 "role": "assistant",
-                "content": "Understood, given a prompt the response will be: [{'price': 1}, {'price': 59}, {'price': 389, 'event': 'something big happened'}, {'price': 400}, {'price': 250}, {'price': 730, 'event': 'something a bit big happened'}, {'price': 870}, {'price': 987}, {'price': 1200, 'event':'explaination for the continous increase in price'}, {'price': 500, 'event': 'reason for the drastic decrease'}], I also understand that the chart could follow any progression and that it is not nessesary that the result needs to have the same progression and that the most important thing is accuracy, I will not including any information that is not absolutely accurate."
+                "content": "Understood, given a prompt the response will be: [{'price': 1}, {'price': 59}, {'price': 389, 'event': 'something big happened'}, {'price': 400}, {'price': 250}, {'price': 730, 'event': 'something a bit big happened'}, {'price': 870}, {'price': 987}, {'price': 1200, 'event':'explaination for the continous increase in price'}, {'price': 500, 'event': 'reason for the drastic decrease'}]"
             },
             {
                 "role": "user",
@@ -141,26 +141,39 @@ class PriceComparator:
         res = res.replace('$@$v=undefined-rv1$@$', '').replace("```json", "").replace("```", "")
 
         return json.loads(res)
+    
+    def compititors(self, req):
+        res = self._black_box_req([
+            {
+                "role": "user",
+                "content": "given a product or service give a list of every "
+            }
+        ])
 
 comparator = PriceComparator()
 
 app = flask.Flask(__name__)
 
-cache = {}
+cache = {
+    "search": {},
+    "merits": {},
+    "chart": {},
+    'compitators': {}
+}
 
 @app.route("/search")
 def search():
     req = flask.request.args.get('q')
 
-    if req in cache.keys():
-        resp = cache[req]
+    if req in cache["search"].keys():
+        resp = cache["search"][req]
     else:
         _resp = comparator.compare(req)
         for i in range(len(_resp)):
             _resp[i]["query"] = req
         resp = flask.Response(json.dumps(_resp))
         resp.headers['Access-Control-Allow-Origin'] = '*'
-        cache[req] = resp
+        cache["search"][req] = resp
         
     return resp
 
@@ -168,12 +181,12 @@ def search():
 def merits():
     req = flask.request.args.get("q")
 
-    if req in cache.keys():
-        resp = cache[req]
+    if req in cache["merits"].keys():
+        resp = cache["merits"][req]
     else:
         resp = flask.Response(json.dumps(comparator.merits(req)))
         resp.headers["Access-Control-Allow-Origin"] = "*"
-        cache[req] = resp
+        cache["merits"][req] = resp
     
     return resp
 
@@ -181,12 +194,25 @@ def merits():
 def chart():
     req = flask.request.args.get("q")
 
-    if req in cache.keys():
-        resp = cache[req]
+    if req in cache["chart"].keys():
+        resp = cache["chart"][req]
     else:
         resp = flask.Response(json.dumps(comparator.charts(req)))
         resp.headers["Access-Control-Allow-Origin"] = "*"
-        cache[req] = resp
+        cache["chart"][req] = resp
+    
+    return resp
+
+@app.route("/compititors")
+def compititors():
+    req = flask.request.args.get("q")
+
+    if req in cache['compitators']:
+        resp = cache['compititors'][req]
+    else:
+        resp = flask.Response(json.dumps(comparator.compititors(req)))
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        cache['compititors'][req] = resp
     
     return resp
 

@@ -24,18 +24,6 @@ const ProductAnalysisCard = ({ data }) => {
     return 'text-red-600'
   }
 
-  const getCompetitorStatus = (status) => {
-    if (status >= 80) return 'Leader'
-    if (status >= 60) return 'Challenger'
-    return 'Follower'
-  }
-
-  const getCompetitorColor = (status) => {
-    if (status >= 80) return 'text-green-600'
-    if (status >= 60) return 'text-yellow-600'
-    return 'text-red-600'
-  }
-
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>

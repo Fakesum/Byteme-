@@ -18,12 +18,12 @@ export default function Component() {
     const [value, setValue] = useState('');
     const [show_map,  setShowMap] = useState(false);
 
+    const [price_range, setPriceRange] = useState('');
+
     function search(query){
       if ((show_map) && (temp_marker != undefined)){
         query += ', from cords: ' + temp_marker[0] + ',' + temp_marker[1];
       }
-
-      console.log(query);
       
       fetch(`http://localhost:3030/search?q=${query}`).then(res => {return res.json()}).then(res => {
           setResults(res);
@@ -70,7 +70,7 @@ export default function Component() {
         return; // Cause OH God it crashes, And I have no idea WHY!!!.
       }
       
-      fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${document.querySelector(".address-input").value}&limit=5&appid=da00953907b5ec2c5db00f53ffd89e68`)
+      fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${document.querySelector(".address-input").value}, between price range ${price_range}&limit=5&appid=da00953907b5ec2c5db00f53ffd89e68`)
         .then(res => {if (res.cod == 400){return [];}; return res.json()})
         .then(res => {if (res != []){
           makeTempMarker(res[0]);
@@ -109,9 +109,10 @@ export default function Component() {
             />
             <br/>
           </div>
+          <input placeholder='price range...' onKeyDown={(e) => {setPriceRange(e.currentTarget.value);}}></input>
           <div className='results-container'>
             {
-                loading != 0 ? loadingBar() : (results == null ? <></>: <Results resData={results}></Results>)
+                loading != 0 ? loadingBar() : (results == null ? <></> : ((results.resData == []) ? console.log("A") : <Results resData={results}></Results>))
             }
           </div>
           <label className="switch">

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useReducer } from 'react'
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react'
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, ReferenceLine, Label } from "recharts"
 import { ChartTooltip } from "./chart"
+import Cookies from 'js-cookie'
 
 function TimelineChart(data) {
   data = data.data;
@@ -114,12 +115,13 @@ export function StockPriceChart({ data }) {
   );
 }
 
-export default function Results(resData) {
+export default function Results(resData, showGraph = false) {
   resData = resData.resData;
 
   if (resData.length == 0){
     return (<div>NO results found, Try searching without the use of location specifier.</div>)
   }
+
   const scrollContainerRef = useRef(null)
   const [showLeftArrow, setShowLeftArrow] = useState(false)
   const [showRightArrow, setShowRightArrow] = useState(true)
@@ -129,6 +131,18 @@ export default function Results(resData) {
   const [loadingStates, setLoadingStates] = useState({})
   const hoverRef = useRef(null)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
+
+  // Function to add to favorites
+  const addToFavorites = (offering) => {
+    const favorites = Cookies.get('favorites') || [];
+    if (!favorites.some(fav => fav.company === offering.company)) {
+      favorites.push(offering);
+      Cookies.set('favorites', favorites, { expires: 7 }); // Store for 7 days
+    } else {
+      alert(`${offering.company} is already in favorites.`);
+    }
+  };
+
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -254,12 +268,12 @@ export default function Results(resData) {
             <div 
               key={index} 
               className="flex-none w-72"
-              onMouseEnter={() => {
-                setHoveredCard(index)
-                loadHoverData(index, offering.company)
-              }}
-              onMouseLeave={() => setHoveredCard(null)}
             >
+              <button
+                onClick={() => addToFavorites(offering)} // Add favorite button
+                className="mt-2 text-yellow-500 hover:text-yellow-700"
+                aria-label="Add to favorites"
+              >♥</button>
               <div className="border rounded-lg shadow-md p-4 h-full flex flex-col">
                 <h3 className="text-xl font-semibold mb-2">{offering.company}</h3>
                 <div className="mb-4">
@@ -300,7 +314,6 @@ export default function Results(resData) {
                   Visit Site
                 </a>
               </div>
-              {renderHoverContent(index)}
             </div>
           ))}
         </div>

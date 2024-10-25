@@ -7,6 +7,8 @@ import LoadingBar from './components/loading';
 import { MapContainer, Marker, TileLayer, Tooltip, Popup, useMap, useMapEvent } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 
+// import DisplayFavorites from './displayFavorites';
+
 export default function Component() {
     const [loading, setLoading] = useState(0);
     const [loading_bar, setLoadingBar] = useState(0);
@@ -17,6 +19,7 @@ export default function Component() {
     const [zoom, setZoom] = useState(0);
     const [value, setValue] = useState('');
     const [show_map,  setShowMap] = useState(false);
+    const [show_graph, setShowGraph] = useState(false);
 
     const [price_range, setPriceRange] = useState('');
 
@@ -119,6 +122,11 @@ export default function Component() {
             <input type="checkbox" onChange={(e) => {setShowMap(e.currentTarget.checked);}}/>
             <span className="slider round"></span>
           </label>
+          <br></br>
+          <label className="switch">
+            <input type="checkbox" onChange={(e) => {setShowGraph(e.currentTarget.checked);forceUpdate();}}/>
+            <span className="slider round"></span>
+          </label>
           {(()=>{
             if (!show_map){
               return;
@@ -152,6 +160,7 @@ export default function Component() {
               </MapContainer>
           </div>)})()}
         </div>
+        {/* <DisplayFavorites></DisplayFavorites> */}
       </main>
 
       <Footer/>
